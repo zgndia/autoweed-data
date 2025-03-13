@@ -1,17 +1,30 @@
+# direct inputs
+# source to this solution and code:
+# http://stackoverflow.com/questions/14489013/simulate-python-keypresses-for-controlling-a-game
+# http://www.gamespp.com/directx/directInputKeyboardScanCodes.html
+
 import ctypes
 import time
 
 SendInput = ctypes.windll.user32.SendInput
 
-# ======== Weed Game Controls ========
-W = 0x11
-A = 0x1E
-S = 0x1F
-D = 0x20
 
-# ======== Input Structures ========
+# Key mappings for directkeys
+letter_to_key = {
+    "W": 0x11,  # W key
+    "A": 0x1E,  # A key
+    "S": 0x1F,  # S key
+    "D": 0x20,  # D key
+    "E": 0x12   # E key (optional, if needed)
+}
+
+NP_2 = 0x50
+NP_4 = 0x4B
+NP_6 = 0x4D
+NP_8 = 0x48
+
+# C struct redefinitions 
 PUL = ctypes.POINTER(ctypes.c_ulong)
-
 class KeyBdInput(ctypes.Structure):
     _fields_ = [("wVk", ctypes.c_ushort),
                 ("wScan", ctypes.c_ushort),
@@ -29,29 +42,36 @@ class MouseInput(ctypes.Structure):
                 ("dy", ctypes.c_long),
                 ("mouseData", ctypes.c_ulong),
                 ("dwFlags", ctypes.c_ulong),
-                ("time", ctypes.c_ulong),
+                ("time",ctypes.c_ulong),
                 ("dwExtraInfo", PUL)]
 
 class Input_I(ctypes.Union):
     _fields_ = [("ki", KeyBdInput),
-                ("mi", MouseInput),
-                ("hi", HardwareInput)]
+                 ("mi", MouseInput),
+                 ("hi", HardwareInput)]
 
 class Input(ctypes.Structure):
     _fields_ = [("type", ctypes.c_ulong),
                 ("ii", Input_I)]
 
-# ======== Key Functions ========
+# Actuals Functions
+
 def PressKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
-    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra))
-    x = Input(ctypes.c_ulong(1), ii_)
+    ii_.ki = KeyBdInput( 0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra) )
+    x = Input( ctypes.c_ulong(1), ii_ )
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 def ReleaseKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
-    ii_.ki = KeyBdInput(0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra))
-    x = Input(ctypes.c_ulong(1), ii_)
+    ii_.ki = KeyBdInput( 0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra) )
+    x = Input( ctypes.c_ulong(1), ii_ )
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+if __name__ == '__main__':
+    PressKey(letter_to_key["A"])
+    time.sleep(1)
+    ReleaseKey(letter_to_key["A"])
+    time.sleep(1)
